@@ -1,19 +1,24 @@
 package com.upgrad.FoodOrderingApp.service.entity;
 
-import org.hibernate.annotations.ColumnDefault;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "state",uniqueConstraints = {@UniqueConstraint(columnNames = {"uuid"})})
+@NamedQueries(
+        {
+                @NamedQuery(name = "stateByUuid",query="select s from StateEntity s where s.uuid=:uuid"),
+                @NamedQuery(name = "stateById", query = "select s from StateEntity s where s.id=:id")
+        }
+)
+
 public class StateEntity {
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private Long id;
 
 
     @Column(name = "uuid")
@@ -26,11 +31,11 @@ public class StateEntity {
     @Size(max = 30)
     private String stateName;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
