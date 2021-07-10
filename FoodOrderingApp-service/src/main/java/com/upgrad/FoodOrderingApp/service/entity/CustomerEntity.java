@@ -9,6 +9,12 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "customer",uniqueConstraints = {@UniqueConstraint(columnNames = {"uuid","contact_number"})})
+@NamedQueries(
+
+        @NamedQuery(name = "customerByContactNumber",query = "SELECT c from CustomerEntity c where c.contactNumber = :contact_number")
+
+
+)
 public class CustomerEntity implements Serializable {
 
 
