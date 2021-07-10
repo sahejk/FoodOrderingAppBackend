@@ -9,6 +9,12 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "customer_address")
+@NamedQueries(
+        {
+                @NamedQuery(name = "customerAddressesListByCustomerId", query = "select ca from CustomerAddressEntity ca where ca.customer = :customer"),
+                @NamedQuery(name = "custAddressByCustIdAddressId", query = "select ca from CustomerAddressEntity ca where ca.customer=:customer and ca.address=:address"),
+        }
+)
 public class CustomerAddressEntity {
 
     @Id

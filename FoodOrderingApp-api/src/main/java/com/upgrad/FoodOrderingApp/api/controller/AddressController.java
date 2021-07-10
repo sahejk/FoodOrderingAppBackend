@@ -4,6 +4,7 @@ import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.businness.AddressService;
 import com.upgrad.FoodOrderingApp.service.businness.CustomerBusinessService;
 import com.upgrad.FoodOrderingApp.service.entity.AddressEntity;
+import com.upgrad.FoodOrderingApp.service.entity.StateEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AddressNotFoundException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SaveAddressException;
@@ -13,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -56,4 +58,64 @@ public class AddressController {
         // Returns the SaveAddressResponse with resource created http status
         return new ResponseEntity<SaveAddressResponse>(saveAddressResponse, HttpStatus.CREATED);
     }
+
+    // Get All Saved Addresses endpoint requests Bearer authorization of the customer
+    // and gets the addresses successfully.
+    @RequestMapping(method = RequestMethod.GET, path = "/address/customer", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<AddressListResponse> getAllSavedAddress(@RequestHeader("authorization") String authorization)
+            throws AuthorizationFailedException {
+
+        // Splits the Bearer authorization text as Bearer and bearerToken
+        String[] bearerToken = authorization.split("Bearer ");
+
+        // Calls the getAllAddress method by passing the bearer token
+        List<AddressEntity> addressEntityList = addressService.getAllAddress(bearerToken[1]);
+
+        AddressListResponse addressListResponse = new AddressListResponse();
+
+        // Loops thru the addressEntityList to get details
+        for (AddressEntity ae : addressEntityList) {
+
+            // Calls the getStateById method by passing stateId
+            StateEntity se = addressService.getStateById(ae.getStateName().getId());
+
+            AddressListState addressListState = new AddressListState();
+
+            // Sets the state to each address element
+            addressListState.setStateName(se.getStateName());
+
+            // Adds the city, flat building name, locality, pincode and state to the addressList
+            AddressList addressList = new AddressList().id(UUID.fromString(ae.getUuid())).city(ae.getCity())
+                    .flatBuildingName(ae.getFlatBuilNumber()).locality(ae.getLocality())
+                    .pincode(ae.getPincode()).state(addressListState);
+
+            // Adds the addressList to addressListResponse
+            addressListResponse.addAddressesItem(addressList);
+        }
+
+        // Returns the AddressListResponse with OK http status
+        return new ResponseEntity<AddressListResponse>(addressListResponse, HttpStatus.OK);
+    }
+
+    // Delete Saved Address endpoint requests Bearer authorization of the customer and Address UUID as path variable
+    // and deletes the address successfully.
+    @RequestMapping(method = RequestMethod.DELETE, path = "/address/{address_id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<DeleteAddressResponse> deleteAddress(String authorization,
+                                                               @PathVariable("address_id") String addressUuid)
+            throws AuthorizationFailedException, AddressNotFoundException {
+
+        // Splits the Bearer authorization text as Bearer and bearerToken
+        String[] bearerToken = authorization.split("Bearer ");
+
+        // Calls the deleteAddress with addressId and bearerToken as argument
+        AddressEntity deletedAddress = addressService.deleteAddress(addressUuid, bearerToken[1]);
+
+        // Loads the DeleteAddressResponse with uuid of the address and the respective status message
+        DeleteAddressResponse deleteAddressResponse = new DeleteAddressResponse().id(UUID.fromString(deletedAddress.getUuid()))
+                .status("ADDRESS DELETED SUCCESSFULLY");
+
+        // Returns the DeleteAddressResponse with OK http status
+        return new ResponseEntity<DeleteAddressResponse>(deleteAddressResponse, HttpStatus.OK);
+    }
+
 }

@@ -11,13 +11,19 @@ import javax.validation.constraints.Size;
 
 @Entity
 @Table (name = "address",uniqueConstraints = {@UniqueConstraint(columnNames = {"uuid"})})
-public class AddressEntity {
+@NamedQueries(
+        {
+                @NamedQuery(name = "addressByUuid", query = "select a from AddressEntity a where a.uuid =:uuid"),
+                @NamedQuery(name = "allAddresses", query = "select a from AddressEntity a "),
+                @NamedQuery(name = "addressById", query = "select a from AddressEntity a where a.id=:id")
+        }
+)public class AddressEntity {
 
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private Long id;
 
     @Column(name = "uuid")
     @Size(max = 200)
@@ -48,11 +54,11 @@ public class AddressEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private StateEntity stateName;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

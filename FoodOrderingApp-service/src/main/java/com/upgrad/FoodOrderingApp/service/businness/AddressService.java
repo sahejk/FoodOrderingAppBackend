@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 @Service
 public class AddressService {
@@ -90,4 +91,41 @@ public class AddressService {
         return addressEntity;
     }
 
+    public List<AddressEntity> getAllAddress(final String bearerToken) throws AuthorizationFailedException {
+
+        customerBusinessService.validateAccessToken(bearerToken);
+
+        //get the customerAuthToken details from customerDao
+        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(bearerToken);
+
+        return customerAddressDao.getAddressForCustomerByUuid(customerAuthTokenEntity.getCustomer().getUuid());
+    }
+
+    @Transactional
+    public StateEntity getStateById(Long stateId) {
+        return stateDao.getStateById(stateId);
+    }
+
+    @Transactional
+    public AddressEntity deleteAddress(String addressUuid, String bearerToken)
+            throws AuthorizationFailedException, AddressNotFoundException {
+
+        customerBusinessService.validateAccessToken(bearerToken);
+        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(bearerToken);
+
+        if (addressUuid == null) {
+            throw new AddressNotFoundException("ANF-005", "Address id can not be empty.");
+        }
+
+        AddressEntity addressEntity = addressDao.getAddressByUuid(addressUuid);
+        CustomerAddressEntity customerAddressEntity = customerAddressDao.getCustAddressByCustIdAddressId(customerAuthTokenEntity.getCustomer(), addressEntity);
+
+        if (addressEntity == null) {
+            throw new AddressNotFoundException("ANF-003", "No address by this id.");
+        } else if (customerAddressEntity == null) {
+            throw new AuthorizationFailedException("ATHR-004", "You are not authorized to view/update/delete any one else's address");
+        }
+
+        return addressDao.deleteAddressByUuid(addressEntity);
+    }
 }
