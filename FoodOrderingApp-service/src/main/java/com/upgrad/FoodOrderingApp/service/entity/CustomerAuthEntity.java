@@ -12,6 +12,10 @@ import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "customer_auth",uniqueConstraints = {@UniqueConstraint(columnNames = {"uuid"})})
+@NamedQueries({
+        @NamedQuery(name = "customerAuthByAccessToken" , query = "select ct from CustomerAuthEntity ct where ct.accessToken=:accessToken"),
+        @NamedQuery(name = "customerAuthById" , query = "select ct from CustomerAuthEntity ct where ct.customer=:customer")
+})
 public class CustomerAuthEntity {
 
     @Id

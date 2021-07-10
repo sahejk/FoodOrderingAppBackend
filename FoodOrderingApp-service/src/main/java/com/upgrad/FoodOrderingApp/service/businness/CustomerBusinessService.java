@@ -1,13 +1,17 @@
 package com.upgrad.FoodOrderingApp.service.businness;
 
 import com.upgrad.FoodOrderingApp.service.dao.CustomerDao;
+import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
+import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
+import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.regex.Pattern;
 
 @Service
@@ -55,5 +59,98 @@ public class CustomerBusinessService {
 
         // Called customerDao to insert new customer record in the database
         return customerDao.createCustomer(customerEntity);
+    }
+
+    @javax.transaction.Transactional
+    public CustomerAuthEntity authenticate(final String contactNumber , final String password) throws AuthenticationFailedException {
+        //Call the getCustomerByContactNumber method in CustomerDao class for CustomerDao object and pass contactNumber as argument
+        // Receive the value returned by getCustomerByContactNumber() method in CustomerEntity type object(name it as customerEntity)
+        CustomerEntity customerEntity = customerDao.getCustomerByContactNumber(contactNumber);
+        if(customerEntity == null) {
+            throw new AuthenticationFailedException("ATH-001", "This contact number has not been registered!");
+        }
+
+        //After that you have got customerEntity from customer table, we need to compare the password entered by the customer
+        // with the password stored in the database
+        //Since the password stored in the database is encrypted, so we also encrypt the password entered by the customer
+        // using the Salt attribute in the database
+        //Call the encrypt() method in PasswordCryptographyProvider class for CryptographyProvider object
+
+        final String encryptedPassword = cryptographyProvider.encrypt(password, customerEntity.getSalt());
+        //Now encryptedPassword contains the password entered by the customer in encrypted form
+        //And customerEntity.getPassword() gives the password stored in the database in encrypted form
+        //We compare both the passwords (Note that in this Assessment we are assuming that the credentials are correct)
+        if(encryptedPassword.equals(customerEntity.getPassword())) {
+            //Implementation of JwtTokenProvider class
+            JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(encryptedPassword);
+            //Now CustomerAuthTokenEntity type object is to be persisted in a database
+            //Declaring an object customerAuthTokenEntity of type CustomerAuthTokenEntity and setting its attributes
+            CustomerAuthEntity customerAuthTokenEntity = new CustomerAuthEntity();
+            customerAuthTokenEntity.setCustomer(customerEntity);
+            final ZonedDateTime now = ZonedDateTime.now();
+            final ZonedDateTime expiresAt = now.plusHours(8);
+
+            customerAuthTokenEntity.setAccessToken(jwtTokenProvider.generateToken(customerAuthTokenEntity.getUuid(), now, expiresAt));
+
+            customerAuthTokenEntity.setLoginAt(now);
+            customerAuthTokenEntity.setExpiresAt(expiresAt);
+            customerAuthTokenEntity.setUuid(customerEntity.getUuid());
+
+            //Call the createAuthToken() method in CustomerDao class for customerDao
+            //Pass customerAuthTokenEntity as an argument
+            customerDao.createAuthToken(customerAuthTokenEntity);
+
+            //updateCustomer() method in CustomerDao class calls the merge() method to update the customerEntity
+            customerDao.updateCustomer(customerEntity);
+            return customerAuthTokenEntity;
+
+        }
+        else{
+            //throw exception
+            throw new AuthenticationFailedException("ATH-002", "Invalid Credentials");
+        }
+
+    }
+
+    @javax.transaction.Transactional
+    public CustomerAuthEntity logout (final String authorizationToken) throws AuthorizationFailedException {
+
+        // Gets the customerAuthTokenEntity with the provided authorizationToken
+        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(authorizationToken);
+
+        // Gets the current time
+        final ZonedDateTime now = ZonedDateTime.now();
+
+        // Validates the provided access token
+        validateAccessToken(authorizationToken);
+
+        // Sets the logout time to now
+        customerAuthTokenEntity.setLogoutAt(now);
+
+        // Calls customerDao to update the customer logout details in the database
+        customerDao.updateCustomerAuth(customerAuthTokenEntity);
+        return customerAuthTokenEntity;
+    }
+
+    @javax.transaction.Transactional
+    public void validateAccessToken(final String authorizationToken) throws AuthorizationFailedException{
+
+        //get the customerAuthToken details from customerDao
+        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(authorizationToken);
+
+        // Gets the current time
+        final ZonedDateTime now = ZonedDateTime.now();
+
+        // Throw AuthorizationFailedException if the customer is not authorized
+        if (customerAuthTokenEntity == null) {
+            throw new AuthorizationFailedException("ATHR-001", "Customer is not Logged in.");
+            // Throw AuthorizationFailedException if the customer is logged out
+        } else if (customerAuthTokenEntity.getLogoutAt() != null) {
+            throw new AuthorizationFailedException("ATHR-002", "Customer is logged out. Log in again to access this endpoint.");
+            // Throw AuthorizationFailedException if the customer session is expired
+        } else if (now.isAfter(customerAuthTokenEntity.getExpiresAt()) ) {
+            throw new AuthorizationFailedException("ATHR-003", "Your session is expired. Log in again to access this endpoint.");
+        }
+
     }
 }
