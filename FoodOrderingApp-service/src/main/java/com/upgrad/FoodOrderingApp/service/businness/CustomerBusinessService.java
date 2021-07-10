@@ -6,6 +6,7 @@ import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
+import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -152,5 +153,84 @@ public class CustomerBusinessService {
             throw new AuthorizationFailedException("ATHR-003", "Your session is expired. Log in again to access this endpoint.");
         }
 
+    }
+
+    @javax.transaction.Transactional
+    public CustomerEntity updateCustomer (CustomerEntity updatedCustomerEntity, final String authorizationToken)
+            throws AuthorizationFailedException, UpdateCustomerException {
+
+        //get the customerAuthToken details from customerDao
+        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(authorizationToken);
+
+        // Validates the provided access token
+        validateAccessToken(authorizationToken);
+
+        //get the customer Details using the customerUuid
+        CustomerEntity customerEntity =  customerDao.getCustomerByUuid(customerAuthTokenEntity.getUuid());
+
+        // Throws UpdateCustomerException if firstname is updated to null
+        if (updatedCustomerEntity.getFirstName() == null) {
+            throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
+        }
+
+        // Now set the updated firstName and lastName and attach it to the customerEntity
+        customerEntity.setFirstName(updatedCustomerEntity.getFirstName());
+        customerEntity.setLastName(updatedCustomerEntity.getLastName());
+
+        //called customerDao to merge the content and update in the database
+        customerDao.updateCustomer(customerEntity);
+        return customerEntity;
+    }
+
+    @javax.transaction.Transactional
+    public CustomerEntity updateCustomerPassword (final String oldPassword, final String newPassword, final String authorizationToken)
+            throws AuthorizationFailedException, UpdateCustomerException {
+
+        // Gets the current time
+        final ZonedDateTime now = ZonedDateTime.now();
+
+        //get the customerAuthToken details from customerDao
+        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(authorizationToken);
+
+        // Validates the provided access token
+        validateAccessToken(authorizationToken);
+
+        //get the customer Details using the customerUuid
+        CustomerEntity customerEntity =  customerDao.getCustomerByUuid(customerAuthTokenEntity.getUuid());
+
+        // Throws UpdateCustomerException if either old password or new password is null
+        if (oldPassword == null || newPassword ==  null) {
+            throw new UpdateCustomerException("UCR-003", "No field should be empty");
+        }
+
+        // Since the password stored in the database is encrypted, so we also encrypt the password entered by the customer
+        // using the Salt attribute in the database
+        // Call the encrypt() method in PasswordCryptographyProvider class for CryptographyProvider object
+        final String encryptedPassword = cryptographyProvider.encrypt(oldPassword, customerEntity.getSalt());
+
+        // Throws UpdateCustomerException if old password provided is incorrect
+        if(!encryptedPassword.equals(customerEntity.getPassword())) {
+            throw new UpdateCustomerException("UCR-004", "Incorrect old password!");
+            // Throws UpdateCustomerException if password length is less than 8 characters
+            // or if it does not contain at least one digit or if it does not contain at least one uppercase character
+            // or if it does not contain any of the mentioned special characters
+        } else if (newPassword.length() < 8
+                || !newPassword.matches(".*[0-9]{1,}.*")
+                || !newPassword.matches(".*[A-Z]{1,}.*")
+                || !newPassword.matches(".*[#@$%&*!^]{1,}.*")) {
+            throw new UpdateCustomerException("UCR-001", "Weak password!");
+        }
+
+        // Now set the updated password and attach it to the customerEntity
+        customerEntity.setPassword(newPassword);
+
+        // Encryption of new password
+        String[] encryptedText = cryptographyProvider.encrypt(customerEntity.getPassword());
+        customerEntity.setSalt(encryptedText[0]);
+        customerEntity.setPassword(encryptedText[1]);
+
+        // Calls customerDao to merge the content and update in the database
+        customerDao.updateCustomer(customerEntity);
+        return customerEntity;
     }
 }

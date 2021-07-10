@@ -1,16 +1,14 @@
 package com.upgrad.FoodOrderingApp.api.controller;
 
 
-import com.upgrad.FoodOrderingApp.api.model.LoginResponse;
-import com.upgrad.FoodOrderingApp.api.model.LogoutResponse;
-import com.upgrad.FoodOrderingApp.api.model.SignupCustomerRequest;
-import com.upgrad.FoodOrderingApp.api.model.SignupCustomerResponse;
+import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.businness.CustomerBusinessService;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
+import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -110,6 +108,63 @@ public class CustomerController {
 
         // Returns the LogoutResponse with OK http status
         return new ResponseEntity<LogoutResponse>(logoutResponse, HttpStatus.OK);
+    }
+
+    // Update customer endpoint requests for firstname and lastname of the customer in “UpdateCustomerRequest”
+    // and updates the customer details successfully.
+    @RequestMapping(method = RequestMethod.PUT, path = "/customer",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<UpdateCustomerResponse> updateCustomer(final UpdateCustomerRequest customerUpdateRequest,
+                                                                 @RequestHeader("authorization") final String authorizaton)
+            throws AuthorizationFailedException, UpdateCustomerException {
+
+        // Splits the Bearer authorization text as Bearer and bearerToken
+        String[] bearerToken = authorizaton.split("Bearer ");
+
+        //Creating a new instance of the CustomerEntity
+        final CustomerEntity updatedCustomerEntity = new CustomerEntity();
+
+        // Gets the firstname and lastname from the UpdateCustomerRequest
+        updatedCustomerEntity.setFirstName(customerUpdateRequest.getFirstName());
+        updatedCustomerEntity.setLastName(customerUpdateRequest.getLastName());
+
+        // Calls the updateCustomer method to update the firstname and/or lastname of the customer
+        CustomerEntity customerEntity = customerBusinessService.updateCustomer(updatedCustomerEntity, bearerToken[1]);
+
+        // Loads the UpdateCustomerResponse with uuid, firstname and lastname of the updated customer
+        // and the respective status message
+        UpdateCustomerResponse updateCustomerResponse = new UpdateCustomerResponse().id(customerEntity.getUuid())
+                .firstName(customerEntity.getFirstName()).lastName(customerEntity.getLastName())
+                .status("CUSTOMER DETAILS UPDATED SUCCESSFULLY");
+
+        // Returns the UpdateCustomerResponse with OK http status
+        return new ResponseEntity<UpdateCustomerResponse>(updateCustomerResponse, HttpStatus.OK);
+
+    }
+
+    // Update customer password endpoint requests for old and new password of the customer in “UpdatePasswordRequest”
+    // and updates the customer password successfully.
+    @RequestMapping(method = RequestMethod.PUT, path = "/customer/password",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<UpdatePasswordResponse> updateCustomerPassword(final UpdatePasswordRequest customerUpdatePasswordRequest,
+                                                                         @RequestHeader("authorization") final String authorizaton)
+            throws AuthorizationFailedException, UpdateCustomerException {
+
+        // Splits the Bearer authorization text as Bearer and bearerToken
+        String[] bearerToken = authorizaton.split("Bearer ");
+
+        // Gets the old and new password from UpdatePasswordRequest
+        String oldPassword = customerUpdatePasswordRequest.getOldPassword();
+        String newPassword = customerUpdatePasswordRequest.getNewPassword();
+
+        // Calls the updateCustomerPassword method to update the password of the customer
+        CustomerEntity customerEntity = customerBusinessService.updateCustomerPassword(oldPassword, newPassword, bearerToken[1]);
+
+        // Loads the UpdatePasswordResponse with uuid of the logged in customer
+        // and the respective status message
+        UpdatePasswordResponse updatePasswordResponse = new UpdatePasswordResponse().id(customerEntity.getUuid())
+                .status("CUSTOMER PASSWORD UPDATED SUCCESSFULLY");
+
+        // Returns the UpdatePasswordResponse with OK http status
+        return new ResponseEntity<UpdatePasswordResponse>(updatePasswordResponse, HttpStatus.OK);
 
     }
 
