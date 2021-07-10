@@ -37,7 +37,7 @@ public class CustomerController {
         CustomerEntity signedUpCustomer =  customerBusinessService.signUpCustomer(customerEntity);
         SignupCustomerResponse signupCustomerResponse = new SignupCustomerResponse().id(signedUpCustomer.getUuid()).status("CUSTOMER SUCCESSFULLY REGISTERED");
 
-        return new ResponseEntity<SignupCustomerResponse>(signupCustomerResponse,HttpStatus.CREATED);
+        return new ResponseEntity<>(signupCustomerResponse, HttpStatus.CREATED);
     }
 
 }
