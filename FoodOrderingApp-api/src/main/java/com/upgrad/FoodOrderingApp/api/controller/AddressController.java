@@ -118,4 +118,22 @@ public class AddressController {
         return new ResponseEntity<DeleteAddressResponse>(deleteAddressResponse, HttpStatus.OK);
     }
 
+    // Get All States endpoint gets all the states successfully.
+    @RequestMapping(method = RequestMethod.GET, path = "/states", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<StatesListResponse> getAllStates() throws AuthorizationFailedException {
+
+        // Calls the getAllStates from addressService
+        List<StateEntity> stateEntityList = addressService.getAllStates();
+        StatesListResponse stateListResponse = new StatesListResponse();
+
+        // Loops thru the stateEntityList to load the StatesListResponse
+        for (StateEntity se : stateEntityList) {
+            StatesList state = new StatesList();
+            state.setStateName(se.getStateName());
+            state.setId(UUID.fromString(se.getUuid()));
+            stateListResponse.addStatesItem(state);
+        }
+
+        return new ResponseEntity<StatesListResponse>(stateListResponse, HttpStatus.OK);
+    }
 }

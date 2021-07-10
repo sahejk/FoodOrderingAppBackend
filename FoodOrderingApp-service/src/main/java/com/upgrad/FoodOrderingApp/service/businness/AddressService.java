@@ -128,4 +128,7 @@ public class AddressService {
 
         return addressDao.deleteAddressByUuid(addressEntity);
     }
-}
+
+    public List<StateEntity> getAllStates() throws AuthorizationFailedException {
+        return stateDao.getAllStates();
+    }}
