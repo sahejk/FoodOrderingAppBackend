@@ -3,6 +3,7 @@ package com.upgrad.FoodOrderingApp.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.upgrad.FoodOrderingApp.api.model.CategoriesListResponse;
 import com.upgrad.FoodOrderingApp.api.model.CategoryDetailsResponse;
+import com.upgrad.FoodOrderingApp.api.model.CategoryListResponse;
 import com.upgrad.FoodOrderingApp.service.businness.CategoryBusinessService;
 import com.upgrad.FoodOrderingApp.service.entity.CategoryEntity;
 import com.upgrad.FoodOrderingApp.service.entity.ItemEntity;
@@ -17,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -116,10 +118,9 @@ public class CategoryControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        final CategoriesListResponse categoriesListResponse = new ObjectMapper().readValue(response, CategoriesListResponse.class);
-        assertEquals(categoriesListResponse.getCategories().size(), 1);
-        assertEquals(categoriesListResponse.getCategories().get(0).getId().toString(), categoryEntityId);
-        assertEquals(categoriesListResponse.getCategories().get(0).getCategoryName(), "sampleCategoryName");
+        final CategoryListResponse[] categoriesListResponse = new ObjectMapper().readValue(response, CategoryListResponse[].class);
+        assertEquals(categoriesListResponse[0].getId().toString(), categoryEntityId);
+        assertEquals(categoriesListResponse[0].getCategoryName(), "sampleCategoryName");
 
         verify(mockCategoryService, times(1)).getAllCategories();
     }
@@ -133,8 +134,7 @@ public class CategoryControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        final CategoriesListResponse categoriesListResponse = new ObjectMapper().readValue(response, CategoriesListResponse.class);
-        assertNull(categoriesListResponse.getCategories());
+        assertEquals(response,"[]");
         verify(mockCategoryService, times(1)).getAllCategories();
     }
 
