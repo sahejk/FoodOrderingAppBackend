@@ -15,10 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
 import java.util.UUID;
@@ -117,13 +114,17 @@ public class CustomerController {
     // Update customer endpoint requests for firstname and lastname of the customer in “UpdateCustomerRequest”
     // and updates the customer details successfully.
     @RequestMapping(method = RequestMethod.PUT, path = "",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<UpdateCustomerResponse> updateCustomer(final UpdateCustomerRequest customerUpdateRequest,
+    public ResponseEntity<UpdateCustomerResponse> updateCustomer(@RequestBody  final UpdateCustomerRequest customerUpdateRequest,
                                                                  @RequestHeader("authorization") final String authorizaton)
             throws AuthorizationFailedException, UpdateCustomerException {
 
         // Splits the Bearer authorization text as Bearer and bearerToken
         String[] bearerToken = authorizaton.split("Bearer ");
-
+        // Throws UpdateCustomerException if firstname is updated to null
+        if (customerUpdateRequest.getFirstName() == null || customerUpdateRequest.getFirstName().isEmpty()) {
+            throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
+        }
+        CustomerEntity customerEntityOld = customerBusinessService.getCustomer(bearerToken[1]);
         //Creating a new instance of the CustomerEntity
         final CustomerEntity updatedCustomerEntity = new CustomerEntity();
 
@@ -132,7 +133,7 @@ public class CustomerController {
         updatedCustomerEntity.setLastName(customerUpdateRequest.getLastName());
 
         // Calls the updateCustomer method to update the firstname and/or lastname of the customer
-        CustomerEntity customerEntity = customerBusinessService.updateCustomer(updatedCustomerEntity, bearerToken[1]);
+        CustomerEntity customerEntity = customerBusinessService.updateCustomer(updatedCustomerEntity, customerEntityOld);
 
         // Loads the UpdateCustomerResponse with uuid, firstname and lastname of the updated customer
         // and the respective status message
@@ -148,27 +149,31 @@ public class CustomerController {
     // Update customer password endpoint requests for old and new password of the customer in “UpdatePasswordRequest”
     // and updates the customer password successfully.
     @RequestMapping(method = RequestMethod.PUT, path = "/password",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<UpdatePasswordResponse> updateCustomerPassword(final UpdatePasswordRequest customerUpdatePasswordRequest,
+    public ResponseEntity<UpdatePasswordResponse> updateCustomerPassword(@RequestBody final UpdatePasswordRequest customerUpdatePasswordRequest,
                                                                          @RequestHeader("authorization") final String authorizaton)
             throws AuthorizationFailedException, UpdateCustomerException {
-
-        // Splits the Bearer authorization text as Bearer and bearerToken
-        String[] bearerToken = authorizaton.split("Bearer ");
 
         // Gets the old and new password from UpdatePasswordRequest
         String oldPassword = customerUpdatePasswordRequest.getOldPassword();
         String newPassword = customerUpdatePasswordRequest.getNewPassword();
 
+        // Splits the Bearer authorization text as Bearer and bearerToken
+        String[] bearerToken = authorizaton.split("Bearer ");
+        if (oldPassword == null || newPassword ==  null || newPassword.isEmpty() || oldPassword.isEmpty()) {
+            throw new UpdateCustomerException("UCR-003", "No field should be empty");
+        }
+
+        CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);
         // Calls the updateCustomerPassword method to update the password of the customer
-        CustomerEntity customerEntity = customerBusinessService.updateCustomerPassword(oldPassword, newPassword, bearerToken[1]);
+        CustomerEntity customerEntityUpdated = customerBusinessService.updateCustomerPassword(oldPassword, newPassword, customerEntity);
 
         // Loads the UpdatePasswordResponse with uuid of the logged in customer
         // and the respective status message
-        UpdatePasswordResponse updatePasswordResponse = new UpdatePasswordResponse().id(customerEntity.getUuid())
+        UpdatePasswordResponse updatePasswordResponse = new UpdatePasswordResponse().id(customerEntityUpdated.getUuid())
                 .status("CUSTOMER PASSWORD UPDATED SUCCESSFULLY");
 
         // Returns the UpdatePasswordResponse with OK http status
-        return new ResponseEntity<UpdatePasswordResponse>(updatePasswordResponse, HttpStatus.OK);
+        return new ResponseEntity<>(updatePasswordResponse, HttpStatus.OK);
 
     }
 

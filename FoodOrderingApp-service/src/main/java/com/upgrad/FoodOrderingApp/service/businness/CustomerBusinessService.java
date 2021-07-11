@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.NoResultException;
 import java.time.ZonedDateTime;
 import java.util.regex.Pattern;
 
@@ -158,15 +157,8 @@ public class CustomerBusinessService {
     }
 
     @javax.transaction.Transactional
-    public CustomerEntity updateCustomer (CustomerEntity updatedCustomerEntity, final String authorizationToken)
+    public CustomerEntity updateCustomer (CustomerEntity updatedCustomerEntity, final CustomerEntity customerEntity)
             throws AuthorizationFailedException, UpdateCustomerException {
-
-        CustomerEntity customerEntity =  this.getCustomer(authorizationToken);
-
-        // Throws UpdateCustomerException if firstname is updated to null
-        if (updatedCustomerEntity.getFirstName() == null) {
-            throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
-        }
 
         // Now set the updated firstName and lastName and attach it to the customerEntity
         customerEntity.setFirstName(updatedCustomerEntity.getFirstName());
@@ -178,17 +170,8 @@ public class CustomerBusinessService {
     }
 
     @javax.transaction.Transactional
-    public CustomerEntity updateCustomerPassword (final String oldPassword, final String newPassword, final String authorizationToken)
+    public CustomerEntity updateCustomerPassword (final String oldPassword, final String newPassword, final CustomerEntity customerEntity)
             throws AuthorizationFailedException, UpdateCustomerException {
-
-        //get the customerAuthToken details from customerDao
-        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(authorizationToken);
-
-        // Validates the provided access token
-        validateAccessToken(authorizationToken);
-
-        //get the customer Details using the customerUuid
-        CustomerEntity customerEntity =  customerDao.getCustomerByUuid(customerAuthTokenEntity.getUuid());
 
         // Throws UpdateCustomerException if either old password or new password is null
         if (oldPassword == null || newPassword ==  null) {
