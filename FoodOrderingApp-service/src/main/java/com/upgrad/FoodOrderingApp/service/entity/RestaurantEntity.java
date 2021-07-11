@@ -7,6 +7,9 @@ import org.hibernate.annotations.OnDeleteAction;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "restaurant",uniqueConstraints = {@UniqueConstraint(columnNames = {"uuid"})})
@@ -41,7 +44,7 @@ public class RestaurantEntity {
 
     @Column(name = "customer_rating")
     @NotNull
-    private Float customerRating;
+    private BigDecimal customerRating;
 
     @Column(name = "average_price_for_two")
     @NotNull
@@ -55,6 +58,14 @@ public class RestaurantEntity {
     @JoinColumn(name = "address_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private AddressEntity address;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "restaurant_category",
+            joinColumns = @JoinColumn(name = "restaurant_id", referencedColumnName="id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "category_id", referencedColumnName="id", nullable = false)
+    )
+    private Set<CategoryEntity> categoryEntities = new HashSet<>();
+
 
     public Integer getId() {
         return id;
@@ -88,11 +99,11 @@ public class RestaurantEntity {
         this.photoURL = photoURL;
     }
 
-    public Float getCustomerRating() {
+    public BigDecimal getCustomerRating() {
         return customerRating;
     }
 
-    public void setCustomerRating(Float customerRating) {
+    public void setCustomerRating(BigDecimal customerRating) {
         this.customerRating = customerRating;
     }
 
@@ -119,4 +130,13 @@ public class RestaurantEntity {
     public void setAddress(AddressEntity address) {
         this.address = address;
     }
+
+    public Set<CategoryEntity> getCategoryEntities() {
+        return categoryEntities;
+    }
+
+    public void setCategoryEntities(Set<CategoryEntity> categoryEntities) {
+        this.categoryEntities = categoryEntities;
+    }
+
 }

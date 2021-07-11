@@ -32,4 +32,13 @@ public class AddressDao {
         entityManager.remove(addressEntity);
         return addressEntity;
     }
+
+    public AddressEntity getAddressById(final Long addressId) {
+        try {
+            return entityManager.createNamedQuery("addressById", AddressEntity.class).setParameter("id", addressId)
+                    .getSingleResult();
+        } catch(NoResultException nre) {
+            return null;
+        }
+    }
 }

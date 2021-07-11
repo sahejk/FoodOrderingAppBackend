@@ -5,6 +5,8 @@ import com.upgrad.FoodOrderingApp.service.entity.RestaurantEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class RestaurantBusinessService {
 
@@ -14,5 +16,15 @@ public class RestaurantBusinessService {
     // A Method which takes the restaurantUUID as parameter for  getRestaurantByUUId endpoint
     public RestaurantEntity getRestaurantByUUId(String restaurantUUID) {
         return restaurantDao.getRestaurantByUUId(restaurantUUID);
+    }
+
+    // A Method is for getAllRestaurants endpoint
+    public List<RestaurantEntity> getAllRestaurants() {
+        return restaurantDao.getAllRestaurants();
+    }
+
+    // A Method which takes the restaurantName as parameter for  getRestaurantsByName endpoint
+    public List<RestaurantEntity> getRestaurantsByName(String restaurantName) {
+        return restaurantDao.getRestaurantsByName(restaurantName);
     }
 }

@@ -137,4 +137,9 @@ public class AddressService {
     public AddressEntity getAddressByUuid(final String addressUuid) {
         return addressDao.getAddressByUuid(addressUuid);
     }
+
+    @Transactional
+    public AddressEntity getAddressById(final Long addressId) {
+        return addressDao.getAddressById(addressId);
+    }
 }
