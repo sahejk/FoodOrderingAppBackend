@@ -26,17 +26,18 @@ public class CustomerBusinessService {
     private PasswordCryptographyProvider cryptographyProvider;
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public CustomerEntity signUpCustomer(CustomerEntity customerEntity)throws SignUpRestrictedException {
+    public CustomerEntity saveCustomer(CustomerEntity customerEntity)throws SignUpRestrictedException {
+
         // Regular expression for email format
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\." + "[a-zA-Z0-9_+&*-]+)*@" + "(?:[a-zA-Z0-9-]+\\.)+[a-z" + "A-Z]{2,7}$";
         Pattern pattern = Pattern.compile(emailRegex);
+        if (customerEntity.getFirstName() == null || customerEntity.getFirstName().isEmpty()  || customerEntity == null ||
+                customerEntity.getContactNumber() == null || customerEntity.getContactNumber().isEmpty() || customerEntity.getPassword() == null || customerEntity.getPassword().isEmpty()  || customerEntity.getEmail() == null || customerEntity.getEmail().isEmpty() ) {
+            throw new SignUpRestrictedException("SGR-005", "Except last name all fields should be filled");
+        }
 
         // Throws SignUpRestrictedException if any field is empty except lastname
-        if (customerEntity.getFirstName() == null || customerEntity.getEmail() == null ||
-                customerEntity.getContactNumber() == null || customerEntity.getPassword() == null) {
-            throw new SignUpRestrictedException("SGR-005", "Except last name all fields should be filled");
-            // Throws SignUpRestrictedException for invalid email format
-        } else if (!pattern.matcher(customerEntity.getEmail()).matches()) {
+        if (!pattern.matcher(customerEntity.getEmail()).matches()) {
             throw new SignUpRestrictedException("SGR-002", "Invalid email-id format!");
             // Throws SignUpRestrictedException if contactNumber is not numbers of length is not 10 digits
         } else if(!customerEntity.getContactNumber().matches("[0-9]+") || customerEntity.getContactNumber().length() != 10) {
@@ -160,14 +161,7 @@ public class CustomerBusinessService {
     public CustomerEntity updateCustomer (CustomerEntity updatedCustomerEntity, final String authorizationToken)
             throws AuthorizationFailedException, UpdateCustomerException {
 
-        //get the customerAuthToken details from customerDao
-        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(authorizationToken);
-
-        // Validates the provided access token
-        validateAccessToken(authorizationToken);
-
-        //get the customer Details using the customerUuid
-        CustomerEntity customerEntity =  customerDao.getCustomerByUuid(customerAuthTokenEntity.getUuid());
+        CustomerEntity customerEntity =  this.getCustomer(authorizationToken);
 
         // Throws UpdateCustomerException if firstname is updated to null
         if (updatedCustomerEntity.getFirstName() == null) {
@@ -186,9 +180,6 @@ public class CustomerBusinessService {
     @javax.transaction.Transactional
     public CustomerEntity updateCustomerPassword (final String oldPassword, final String newPassword, final String authorizationToken)
             throws AuthorizationFailedException, UpdateCustomerException {
-
-        // Gets the current time
-        final ZonedDateTime now = ZonedDateTime.now();
 
         //get the customerAuthToken details from customerDao
         CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(authorizationToken);
@@ -239,5 +230,20 @@ public class CustomerBusinessService {
     public CustomerAuthEntity getCustomerAuthToken(final String accessToken) {
         // Calls customerDao to get the access token of the customer from the database
         return customerDao.getCustomerAuthToken(accessToken);
+    }
+
+    /* This method is to getCustomer using accessToken and return the CustomerEntity .
+If error throws exception with error code and error message.
+*/
+    public CustomerEntity getCustomer(String accessToken) throws AuthorizationFailedException {
+
+        //get the customerAuthToken details from customerDao
+        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(accessToken);
+
+        // Validates the provided access token
+        validateAccessToken(accessToken);
+
+        //get the customer Details using the customerUuid
+        return customerDao.getCustomerByUuid(customerAuthTokenEntity.getUuid());
     }
 }

@@ -24,7 +24,7 @@ public class RestaurantBusinessService {
     private CustomerBusinessService customerBusinessService;
 
     // A Method which takes the restaurantUUID as parameter for  getRestaurantByUUId endpoint
-    public RestaurantEntity getRestaurantByUUId(String restaurantUUID) {
+    public RestaurantEntity getRestaurantByUUId(String restaurantUUID) throws RestaurantNotFoundException {
         return restaurantDao.getRestaurantByUUId(restaurantUUID);
     }
 

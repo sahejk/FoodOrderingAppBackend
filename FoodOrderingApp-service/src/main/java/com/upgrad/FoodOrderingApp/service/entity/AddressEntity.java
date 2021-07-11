@@ -54,6 +54,18 @@ import javax.validation.constraints.Size;
     @OnDelete(action = OnDeleteAction.CASCADE)
     private StateEntity stateName;
 
+    public AddressEntity(String addressId, String s, String someLocality, String someCity, String s1, StateEntity stateEntity) {
+        this.uuid = addressId;
+        this.locality = someLocality;
+        this.city = someCity;
+        this.stateName = stateEntity;
+        this.pincode = s1;
+        this.flatBuilNumber = s;
+    }
+
+    public AddressEntity() {
+    }
+
     public Long getId() {
         return id;
     }

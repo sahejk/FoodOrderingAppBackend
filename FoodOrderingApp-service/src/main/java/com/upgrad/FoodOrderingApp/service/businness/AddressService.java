@@ -46,12 +46,8 @@ public class AddressService {
     }
 
     @Transactional
-    public AddressEntity saveAddress(AddressEntity addressEntity, String bearerToken)
+    public AddressEntity saveAddress(AddressEntity addressEntity, CustomerEntity customerEntity)
             throws AuthorizationFailedException, SaveAddressException, AddressNotFoundException {
-
-        customerBusinessService.validateAccessToken(bearerToken);
-
-        getStateByUUID(addressEntity.getStateName().getUuid());
 
         if (addressEntity.getCity() == null || addressEntity.getCity().isEmpty() ||
                 addressEntity.getStateName() == null ||
@@ -77,11 +73,6 @@ public class AddressService {
 
         addressEntity = addressDao.createAddress(addressEntity);
 
-        //get the customerAuthToken details from customerDao
-        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(bearerToken);
-
-        // Save the customer address
-        final CustomerEntity customerEntity = customerDao.getCustomerByUuid(customerAuthTokenEntity.getUuid());
         final CustomerAddressEntity customerAddressEntity = new CustomerAddressEntity();
 
         customerAddressEntity.setAddress(addressEntity);
@@ -91,14 +82,8 @@ public class AddressService {
         return addressEntity;
     }
 
-    public List<AddressEntity> getAllAddress(final String bearerToken) throws AuthorizationFailedException {
-
-        customerBusinessService.validateAccessToken(bearerToken);
-
-        //get the customerAuthToken details from customerDao
-        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(bearerToken);
-
-        return customerAddressDao.getAddressForCustomerByUuid(customerAuthTokenEntity.getCustomer().getUuid());
+    public List<AddressEntity> getAllAddress(final CustomerEntity customerEntity) throws AuthorizationFailedException {
+        return customerAddressDao.getAddressForCustomerByUuid(customerEntity.getUuid());
     }
 
     @Transactional
@@ -107,18 +92,13 @@ public class AddressService {
     }
 
     @Transactional
-    public AddressEntity deleteAddress(String addressUuid, String bearerToken)
+    public AddressEntity deleteAddress(AddressEntity addressEntity, CustomerEntity customerEntity)
             throws AuthorizationFailedException, AddressNotFoundException {
 
-        customerBusinessService.validateAccessToken(bearerToken);
-        CustomerAuthEntity customerAuthTokenEntity = customerDao.getCustomerAuthToken(bearerToken);
-
-        if (addressUuid == null) {
+        if (customerEntity == null) {
             throw new AddressNotFoundException("ANF-005", "Address id can not be empty.");
         }
-
-        AddressEntity addressEntity = addressDao.getAddressByUuid(addressUuid);
-        CustomerAddressEntity customerAddressEntity = customerAddressDao.getCustAddressByCustIdAddressId(customerAuthTokenEntity.getCustomer(), addressEntity);
+        CustomerAddressEntity customerAddressEntity = customerAddressDao.getCustAddressByCustIdAddressId(customerEntity, addressEntity);
 
         if (addressEntity == null) {
             throw new AddressNotFoundException("ANF-003", "No address by this id.");
@@ -134,7 +114,7 @@ public class AddressService {
     }
 
     @Transactional
-    public AddressEntity getAddressByUuid(final String addressUuid) {
+    public AddressEntity getAddressByUuid(final String addressUuid) throws AuthorizationFailedException, AddressNotFoundException {
         return addressDao.getAddressByUuid(addressUuid);
     }
 

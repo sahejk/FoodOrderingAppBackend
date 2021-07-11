@@ -3,6 +3,7 @@ package com.upgrad.FoodOrderingApp.api.controller;
 
 import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.businness.CustomerBusinessService;
+import com.upgrad.FoodOrderingApp.service.dao.CustomerDao;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Base64;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/customer")
@@ -29,8 +31,11 @@ public class CustomerController {
     @Autowired
     CustomerBusinessService customerBusinessService;
 
-    @RequestMapping(method = RequestMethod.POST,path = "/",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<SignupCustomerResponse> signUpCustomer(SignupCustomerRequest signupCustomerRequest)throws SignUpRestrictedException {
+    @Autowired
+    private CustomerDao customerDao;
+
+    @RequestMapping(method = RequestMethod.POST,path = "/signup",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<SignupCustomerResponse> signUpCustomer(final SignupCustomerRequest signupCustomerRequest)throws SignUpRestrictedException {
         CustomerEntity customerEntity = new CustomerEntity();
         customerEntity.setFirstName(signupCustomerRequest.getFirstName());
         customerEntity.setLastName(signupCustomerRequest.getLastName());
@@ -39,15 +44,14 @@ public class CustomerController {
         customerEntity.setPassword(signupCustomerRequest.getPassword());
         customerEntity.setUuid(UUID.randomUUID().toString());
 
-
-        CustomerEntity signedUpCustomer =  customerBusinessService.signUpCustomer(customerEntity);
+        CustomerEntity signedUpCustomer =  customerBusinessService.saveCustomer(customerEntity);
         SignupCustomerResponse signupCustomerResponse = new SignupCustomerResponse().id(signedUpCustomer.getUuid()).status("CUSTOMER SUCCESSFULLY REGISTERED");
 
         return new ResponseEntity<>(signupCustomerResponse, HttpStatus.CREATED);
     }
 
     // Login endpoint requests for Basic authentication of the customer and logs in a customer successfully.
-    @RequestMapping(method = RequestMethod.POST , path="/customer/login" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(method = RequestMethod.POST , path="/login" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<LoginResponse> login(@RequestHeader("authorization")  final String authorization)
             throws AuthenticationFailedException {
 
@@ -90,7 +94,7 @@ public class CustomerController {
     }
 
     // Logout endpoint requests for Bearer authorization of the customer and logs out the customer successfully.
-    @RequestMapping(method= RequestMethod.POST, path="/customer/logout", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(method= RequestMethod.POST, path="/logout", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<LogoutResponse>logout(@RequestHeader("authorization") final String authorization)
             throws AuthorizationFailedException {
 
@@ -112,7 +116,7 @@ public class CustomerController {
 
     // Update customer endpoint requests for firstname and lastname of the customer in “UpdateCustomerRequest”
     // and updates the customer details successfully.
-    @RequestMapping(method = RequestMethod.PUT, path = "/customer",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(method = RequestMethod.PUT, path = "",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<UpdateCustomerResponse> updateCustomer(final UpdateCustomerRequest customerUpdateRequest,
                                                                  @RequestHeader("authorization") final String authorizaton)
             throws AuthorizationFailedException, UpdateCustomerException {
@@ -143,7 +147,7 @@ public class CustomerController {
 
     // Update customer password endpoint requests for old and new password of the customer in “UpdatePasswordRequest”
     // and updates the customer password successfully.
-    @RequestMapping(method = RequestMethod.PUT, path = "/customer/password",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(method = RequestMethod.PUT, path = "/password",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<UpdatePasswordResponse> updateCustomerPassword(final UpdatePasswordRequest customerUpdatePasswordRequest,
                                                                          @RequestHeader("authorization") final String authorizaton)
             throws AuthorizationFailedException, UpdateCustomerException {
