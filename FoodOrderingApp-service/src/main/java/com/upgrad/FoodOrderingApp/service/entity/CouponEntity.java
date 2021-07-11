@@ -9,6 +9,8 @@ import javax.validation.constraints.Size;
 @Table(name = "coupon",uniqueConstraints = {@UniqueConstraint(columnNames = {"uuid"})})
 @NamedQueries(
         {
+                @NamedQuery(name = "couponByUuid", query = "select c from CouponEntity c where c.uuid=:uuid"),
+                @NamedQuery(name = "couponById", query = "select c from CouponEntity c where c.id=:id"),
                 @NamedQuery(name = "couponByName", query = "select c from CouponEntity c where c.couponName=:couponName")
         }
 )

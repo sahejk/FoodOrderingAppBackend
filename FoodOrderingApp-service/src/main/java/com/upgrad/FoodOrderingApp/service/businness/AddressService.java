@@ -131,4 +131,10 @@ public class AddressService {
 
     public List<StateEntity> getAllStates() throws AuthorizationFailedException {
         return stateDao.getAllStates();
-    }}
+    }
+
+    @Transactional
+    public AddressEntity getAddressByUuid(final String addressUuid) {
+        return addressDao.getAddressByUuid(addressUuid);
+    }
+}

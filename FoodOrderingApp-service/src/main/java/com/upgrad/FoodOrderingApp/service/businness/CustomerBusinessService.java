@@ -234,4 +234,10 @@ public class CustomerBusinessService {
         customerDao.updateCustomer(customerEntity);
         return customerEntity;
     }
+
+    @Transactional
+    public CustomerAuthEntity getCustomerAuthToken(final String accessToken) {
+        // Calls customerDao to get the access token of the customer from the database
+        return customerDao.getCustomerAuthToken(accessToken);
+    }
 }

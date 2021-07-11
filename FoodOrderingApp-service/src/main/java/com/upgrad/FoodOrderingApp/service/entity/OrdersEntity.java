@@ -4,10 +4,19 @@ package com.upgrad.FoodOrderingApp.service.entity;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "orders",uniqueConstraints = {@UniqueConstraint(columnNames = {"uuid"})})
+@NamedQueries(
+        {
+                @NamedQuery(name = "ordersByUuid",query="select o from OrdersEntity o where o.uuid=:uuid"),
+                @NamedQuery(name = "ordersById", query = "select o from OrdersEntity o where o.id=:id"),
+                @NamedQuery(name = "ordersByCustomer", query = "select o from OrdersEntity o where o.customer=:customer order by o.date desc"),
+                @NamedQuery(name = "ordersByRestaurant", query = "select o from OrdersEntity o where o.restaurant=:restaurant order by o.date desc"),
+        }
+)
 public class OrdersEntity {
 
 
@@ -24,14 +33,14 @@ public class OrdersEntity {
 
     @Column(name = "bill")
     @NotNull
-    private Float bill;
+    private BigDecimal bill;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "coupon_id")
     private CouponEntity coupon;
 
     @Column(name = "discount")
-    private Float discount;
+    private BigDecimal discount;
 
     @Column(name = "date")
     @NotNull
@@ -73,11 +82,11 @@ public class OrdersEntity {
         this.uuid = uuid;
     }
 
-    public Float getBill() {
+    public BigDecimal getBill() {
         return bill;
     }
 
-    public void setBill(Float bill) {
+    public void setBill(BigDecimal bill) {
         this.bill = bill;
     }
 
@@ -89,11 +98,11 @@ public class OrdersEntity {
         this.coupon = coupon;
     }
 
-    public Float getDiscount() {
+    public BigDecimal getDiscount() {
         return discount;
     }
 
-    public void setDiscount(Float discount) {
+    public void setDiscount(BigDecimal discount) {
         this.discount = discount;
     }
 
