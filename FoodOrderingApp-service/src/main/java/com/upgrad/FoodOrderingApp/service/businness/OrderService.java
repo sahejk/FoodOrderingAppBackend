@@ -12,7 +12,6 @@ import javax.transaction.Transactional;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -46,9 +45,8 @@ public class OrderService {
 
 
     @Transactional
-    public CouponEntity getCouponByName(String couponName, final String authorizationToken) throws AuthorizationFailedException {
+    public CouponEntity getCouponByName(String couponName) throws AuthorizationFailedException, CouponNotFoundException {
         // Validates the access token retrieved from database
-        customerBusinessService.validateAccessToken(authorizationToken);
         return orderDao.getCouponByName(couponName);
     }
 
@@ -58,21 +56,12 @@ public class OrderService {
     }
 
     @Transactional
-    public OrdersEntity saveOrder(AddressEntity addressEntity, CouponEntity couponEntity, PaymentEntity paymentEntity, RestaurantEntity restaurantEntity, ArrayList<OrderItemEntity> orderItemEntities, OrdersEntity ordersEntity, String authorizationToken)
+    public OrdersEntity saveOrder(AddressEntity addressEntity, CouponEntity couponEntity, PaymentEntity paymentEntity, RestaurantEntity restaurantEntity, ArrayList<OrderItemEntity> orderItemEntities, OrdersEntity ordersEntity, CustomerEntity customerEntity)
             throws AuthorizationFailedException, CouponNotFoundException, AddressNotFoundException,
             PaymentMethodNotFoundException, RestaurantNotFoundException, ItemNotFoundException {
 
-        // Validates the provided access token
-        customerBusinessService.validateAccessToken(authorizationToken);
-
-        // Gets the customerAuthToken details from customerDao
-        CustomerAuthEntity customerAuthTokenEntity = customerBusinessService.getCustomerAuthToken(authorizationToken);
-
-        // Gets the customer details from customerAuthTokenEntity
-        CustomerEntity customerEntity = customerAuthTokenEntity.getCustomer();
-
         // Gets the Customer address details from customerAddressDao
-        CustomerAddressEntity customerAddressEntity = customerAddressDao.getCustAddressByCustIdAddressId(customerAuthTokenEntity.getCustomer(), addressEntity);
+        CustomerAddressEntity customerAddressEntity = customerAddressDao.getCustAddressByCustIdAddressId(customerEntity, addressEntity);
 
         // Throws CouponNotFoundException if coupon not found
         if (couponEntity == null) {

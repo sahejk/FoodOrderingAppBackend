@@ -53,6 +53,7 @@ public class OrderController {
 
         // Splits the Bearer authorization text as Bearer and bearerToken
         String[] bearerToken = authorization.split( "Bearer ");
+        CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);
 
         // Throw exception if path variable(coupon_name) is empty
         if(couponName == null || couponName.isEmpty() || couponName.equalsIgnoreCase("\"\"")){
@@ -60,7 +61,7 @@ public class OrderController {
         }
 
         // Calls getCouponByName with couponName and bearerToken as arguments
-        CouponEntity couponEntity = orderService.getCouponByName(couponName, bearerToken[1]);
+        CouponEntity couponEntity = orderService.getCouponByName(couponName);
 
         // Throw exception if there is no coupon with the name provided
         if (couponEntity == null) {
@@ -82,14 +83,8 @@ public class OrderController {
 
         String[] bearerToken = authorization.split( "Bearer ");
 
-        // Validates the access token retrieved from database
-        customerBusinessService.validateAccessToken(bearerToken[1]);
-
-        // Gets the customerAuthToken details from customerDao
-        CustomerAuthEntity customerAuthTokenEntity = customerBusinessService.getCustomerAuthToken(bearerToken[1]);
-
         // Gets the customer details from customerAuthTokenEntity
-        CustomerEntity customerEntity = customerAuthTokenEntity.getCustomer();
+        CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);
 
         // Gets all the past orders of the customer
         final List<OrdersEntity> ordersEntityList = orderService.getCustomerOrders(customerEntity);
@@ -182,6 +177,7 @@ public class OrderController {
 
         // Splits the Bearer authorization text as Bearer and bearerToken
         String[] bearerToken = authorization.split( "Bearer ");
+        CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);
 
         // Gets the address details from addressService
         AddressEntity addressEntity = addressService.getAddressByUuid(saveOrderRequest.getAddressId());
@@ -214,7 +210,7 @@ public class OrderController {
         ordersEntity.setDiscount(saveOrderRequest.getDiscount());
 
         // Calls the saveOrder method of orderService and recieves the order entity
-        final OrdersEntity savedOrderEntity = orderService.saveOrder(addressEntity,couponEntity,paymentEntity,restaurantEntity,orderItemEntities, ordersEntity, bearerToken[1]);
+        final OrdersEntity savedOrderEntity = orderService.saveOrder(addressEntity,couponEntity,paymentEntity,restaurantEntity,orderItemEntities, ordersEntity, customerEntity);
 
         // Loads the uuid of the saved order and respective status message to SaveOrderResponse
         SaveOrderResponse saveOrderResponse = new SaveOrderResponse().id(savedOrderEntity.getUuid())

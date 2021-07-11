@@ -34,6 +34,16 @@ public class CouponEntity {
     @NotNull
     private Integer percent;
 
+    public CouponEntity(String couponId, String myCoupon, int i) {
+        this.uuid = couponId;
+        this.couponName = myCoupon;
+        this.percent = i;
+    }
+
+    public CouponEntity() {
+
+    }
+
     public Integer getId() {
         return id;
     }
