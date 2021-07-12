@@ -2,6 +2,7 @@ package com.upgrad.FoodOrderingApp.service.businness;
 
 import com.upgrad.FoodOrderingApp.service.dao.CouponDao;
 import com.upgrad.FoodOrderingApp.service.entity.CouponEntity;
+import com.upgrad.FoodOrderingApp.service.exception.CouponNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class CouponService {
     }
 
     @Transactional
-    public CouponEntity getCouponByUuid(final String couponUuid) {
+    public CouponEntity getCouponByUuid(final String couponUuid) throws CouponNotFoundException {
         return couponDao.getCouponByUuid(couponUuid);
     }
 }

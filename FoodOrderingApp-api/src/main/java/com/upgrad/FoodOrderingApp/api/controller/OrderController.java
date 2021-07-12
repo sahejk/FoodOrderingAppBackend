@@ -170,7 +170,7 @@ public class OrderController {
      */
     @CrossOrigin
     @RequestMapping(method = RequestMethod.POST, path = "/order", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<SaveOrderResponse> saveOrder(@RequestHeader("authorization") final String authorization, final SaveOrderRequest saveOrderRequest)
+    public ResponseEntity<SaveOrderResponse> saveOrder(@RequestHeader("authorization") final String authorization,@RequestBody final SaveOrderRequest saveOrderRequest)
             throws AuthorizationFailedException, CouponNotFoundException,
             AddressNotFoundException, PaymentMethodNotFoundException,
             RestaurantNotFoundException, ItemNotFoundException {
@@ -179,14 +179,15 @@ public class OrderController {
         String[] bearerToken = authorization.split( "Bearer ");
         CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);
 
-        // Gets the address details from addressService
-        AddressEntity addressEntity = addressService.getAddressByUuid(saveOrderRequest.getAddressId());
-
         // Gets the coupon details from couponService
         CouponEntity couponEntity = couponService.getCouponByUuid(saveOrderRequest.getCouponId().toString());
 
         // Gets the payment details from paymentService
         PaymentEntity paymentEntity = paymentService.getPaymentByUuid(saveOrderRequest.getPaymentId().toString());
+
+        // Gets the address details from addressService
+        AddressEntity addressEntity = addressService.getAddressByUuid(saveOrderRequest.getAddressId());
+
 
         // Gets the restaurant details from restaurantService
         RestaurantEntity restaurantEntity = restaurantBusinessService.getRestaurantByUUId(saveOrderRequest.getRestaurantId().toString());

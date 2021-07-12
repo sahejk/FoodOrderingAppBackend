@@ -67,7 +67,15 @@ public class OrdersEntity {
     private RestaurantEntity restaurant;
 
     public OrdersEntity(String orderId, double v, CouponEntity couponEntity, double v1, Date orderDate, PaymentEntity paymentEntity, CustomerEntity customerEntity, AddressEntity addressEntity, RestaurantEntity restaurantEntity) {
-
+        this.uuid = orderId;
+        this.coupon = couponEntity;
+        this.bill = new BigDecimal(v);
+        this.discount = new BigDecimal(v1);
+        this.date = ZonedDateTime.now();
+        this.payment = paymentEntity;
+        this.customer = customerEntity;
+        this.address = addressEntity;
+        this.restaurant = restaurantEntity;
     }
 
     public OrdersEntity() {
