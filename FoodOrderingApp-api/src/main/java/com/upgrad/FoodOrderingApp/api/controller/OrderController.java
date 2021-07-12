@@ -51,6 +51,7 @@ public class OrderController {
     public ResponseEntity<CouponDetailsResponse> getCoupon(@RequestHeader("authorization")  final String authorization, @PathVariable("coupon_name") final String couponName)
             throws AuthorizationFailedException, CouponNotFoundException {
 
+
         // Splits the Bearer authorization text as Bearer and bearerToken
         String[] bearerToken = authorization.split( "Bearer ");
         CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);

@@ -54,7 +54,7 @@ public class CustomerBusinessService {
             throw new SignUpRestrictedException("SGR-001", "This contact number is already registered! Try other contact number.");
         }
 
-        // Encryption of password
+        //Creating an  Encryption of password
         String[] encryptedText = cryptographyProvider.encrypt(customerEntity.getPassword());
         customerEntity.setSalt(encryptedText[0]);
         customerEntity.setPassword(encryptedText[1]);
