@@ -15,7 +15,17 @@ public class CategoryBusinessService {
 
     // A Method which takes the categoryUUId as parameter for  getCategoryEntityByUUId endpoint
     public CategoryEntity getCategoryEntityByUuid(final String categoryUUId) throws CategoryNotFoundException {
-        return  categoryDao.getCategoryByUUId(categoryUUId);
+        // Throw exception if path variable(category_id) is empty
+        if(categoryUUId == null || categoryUUId.isEmpty() || categoryUUId.equalsIgnoreCase("\"\"")){
+            throw new CategoryNotFoundException("CNF-001", "Category id field should not be empty");
+        }
+        CategoryEntity matchedCategory = categoryDao.getCategoryByUUId(categoryUUId);
+        // Throw exception if given category_id not matched with any category in DB
+        if(matchedCategory == null){
+            throw new CategoryNotFoundException("CNF-002", "No category by this id");
+        }
+
+        return matchedCategory;
     }
 
     // A Method which is for  getAllCategories endpoint

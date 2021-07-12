@@ -29,6 +29,9 @@ public class RestaurantController {
     @Autowired
     private CategoryBusinessService categoryBusinessService;
 
+    @Autowired
+    private CustomerBusinessService customerBusinessService;
+
     /**
      *
      * @return List of all restaurants in the database
@@ -102,7 +105,7 @@ public class RestaurantController {
      * @throws RestaurantNotFoundException - when restaurant name field is empty
      */
     @RequestMapping(method = RequestMethod.GET, path = "/restaurant/name/{restaurant_name}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<RestaurantListResponse> getRestaurantsByName(@PathVariable String restaurant_name)
+    public ResponseEntity<RestaurantListResponse> getRestaurantsByName(@PathVariable("restaurant_name") String restaurant_name)
             throws RestaurantNotFoundException {
 
         // Throw exception if path variable(restaurant_name) is empty
@@ -126,22 +129,18 @@ public class RestaurantController {
             detail.setAveragePrice(n.getAveragePriceForTwo());
             detail.setNumberCustomersRated(n.getNumberOfCustomerRated());
 
-            // Getting address of restaurant from address entity
-            AddressEntity addressEntity = addressService.getAddressById(n.getAddress().getId());
             RestaurantDetailsResponseAddress responseAddress = new RestaurantDetailsResponseAddress();
 
-            responseAddress.setId(UUID.fromString(addressEntity.getUuid()));
-            responseAddress.setFlatBuildingName(addressEntity.getFlatBuilNumber());
-            responseAddress.setLocality(addressEntity.getLocality());
-            responseAddress.setCity(addressEntity.getCity());
-            responseAddress.setPincode(addressEntity.getPincode());
+            responseAddress.setId(UUID.fromString(n.getAddress().getUuid()));
+            responseAddress.setFlatBuildingName(n.getAddress().getFlatBuilNumber());
+            responseAddress.setLocality(n.getAddress().getLocality());
+            responseAddress.setCity(n.getAddress().getCity());
+            responseAddress.setPincode(n.getAddress().getPincode());
 
-            // Getting state for current address from state entity
-            StateEntity stateEntity = stateBusinessService.getStateById(addressEntity.getStateName().getId());
             RestaurantDetailsResponseAddressState responseAddressState = new RestaurantDetailsResponseAddressState();
 
-            responseAddressState.setId(UUID.fromString(stateEntity.getUuid()));
-            responseAddressState.setStateName(stateEntity.getStateName());
+            responseAddressState.setId(UUID.fromString(n.getAddress().getStateName().getUuid()));
+            responseAddressState.setStateName(n.getAddress().getStateName().getStateName());
             responseAddress.setState(responseAddressState);
 
             // Setting address with state into restaurant obj
@@ -177,20 +176,10 @@ public class RestaurantController {
      * @throws CategoryNotFoundException - When Given category id  field is empty
      */
     @RequestMapping(method = RequestMethod.GET, path = "/restaurant/category/{category_id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity getRestaurantByCategoryId(@PathVariable String category_id) throws CategoryNotFoundException {
-
-        // Throw exception if path variable(category_id) is empty
-        if(category_id == null || category_id.isEmpty() || category_id.equalsIgnoreCase("\"\"")){
-            throw new CategoryNotFoundException("CNF-001", "Category id field should not be empty");
-        }
+    public ResponseEntity getRestaurantByCategoryId(@PathVariable("category_id") String category_id) throws CategoryNotFoundException {
 
         // Getting category which matched with given category_id with help of category business service
         CategoryEntity matchedCategory = categoryBusinessService.getCategoryEntityByUuid(category_id);
-
-        // Throw exception if given category_id not matched with any category in DB
-        if(matchedCategory == null){
-            throw new CategoryNotFoundException("CNF-002", "No category by this id");
-        }
 
         // If given category_id match with any category in DB, then get all restaurants having matched category
         final List<RestaurantCategoryEntity> allRestaurantCategories = restaurantBusinessService.getRestaurantByCategoryId(matchedCategory.getId());
@@ -255,7 +244,7 @@ public class RestaurantController {
      * @throws RestaurantNotFoundException - When given restaurant id field is empty
      */
     @RequestMapping(method = RequestMethod.GET, path = "/restaurant/{restaurant_id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity getRestaurantByUUId(@PathVariable String restaurant_id) throws RestaurantNotFoundException {
+    public ResponseEntity getRestaurantByUUId(@PathVariable("restaurant_id") String restaurant_id) throws RestaurantNotFoundException {
 
         // Throw exception if path variable(restaurant_id) is empty
         if(restaurant_id == null || restaurant_id.isEmpty() || restaurant_id.equalsIgnoreCase("\"\"")){
@@ -339,21 +328,21 @@ public class RestaurantController {
      *         InvalidRatingException - When the Rating value provided is invalid
      */
     @RequestMapping(method = RequestMethod.PUT, path = "/restaurant/{restaurant_id}",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<RestaurantUpdatedResponse> updateCustomerRating(@RequestHeader("authorization") final String authorization, @RequestParam Double customerRating, @PathVariable String restaurant_id )
+    public ResponseEntity<RestaurantUpdatedResponse> updateCustomerRating(@RequestHeader("authorization") final String authorization, @RequestParam("customer_rating") Double customerRating, @PathVariable("restaurant_id") String restaurant_id )
             throws AuthorizationFailedException, InvalidRatingException, RestaurantNotFoundException {
 
         // Get the bearerToken
         String[] bearerToken = authorization.split("Bearer ");
-
+        CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);
         // Call the RestaurantBusinessService to update the customer
-        RestaurantEntity restaurantEntity = restaurantBusinessService.updateCustomerRating(customerRating, restaurant_id, bearerToken[1]);
+        RestaurantEntity restaurantEntity = restaurantBusinessService.updateCustomerRating(customerRating, restaurant_id, customerEntity);
 
         // Attach the details to the updateResponse
         RestaurantUpdatedResponse restaurantUpdatedResponse = new RestaurantUpdatedResponse()
                 .id(UUID.fromString(restaurantEntity.getUuid())).status("RESTAURANT RATING UPDATED SUCCESSFULLY");
 
         // Returns the RestaurantUpdatedResponse with OK http status
-        return new ResponseEntity<RestaurantUpdatedResponse>(restaurantUpdatedResponse, HttpStatus.OK);
+        return new ResponseEntity<>(restaurantUpdatedResponse, HttpStatus.OK);
     }
 
 }

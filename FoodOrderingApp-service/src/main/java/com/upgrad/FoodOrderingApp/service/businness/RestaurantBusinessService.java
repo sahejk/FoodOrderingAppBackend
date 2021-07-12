@@ -1,9 +1,11 @@
 package com.upgrad.FoodOrderingApp.service.businness;
 
 import com.upgrad.FoodOrderingApp.service.dao.RestaurantDao;
+import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.entity.RestaurantCategoryEntity;
 import com.upgrad.FoodOrderingApp.service.entity.RestaurantEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
+import com.upgrad.FoodOrderingApp.service.exception.CategoryNotFoundException;
 import com.upgrad.FoodOrderingApp.service.exception.InvalidRatingException;
 import com.upgrad.FoodOrderingApp.service.exception.RestaurantNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,13 +41,8 @@ public class RestaurantBusinessService {
     }
 
     @Transactional
-    public RestaurantEntity updateCustomerRating (final Double customerRating, final String restaurant_id, final String authorizationToken)
+    public RestaurantEntity updateCustomerRating (final Double customerRating, final String restaurant_id, final CustomerEntity customerEntity)
             throws AuthorizationFailedException, RestaurantNotFoundException, InvalidRatingException {
-
-        final ZonedDateTime now = ZonedDateTime.now();
-
-        // Validates the customer using the authorizationToken
-        customerBusinessService.validateAccessToken(authorizationToken);
 
         // Throw exception if path variable(restaurant_id) is empty
         if(restaurant_id == null || restaurant_id.isEmpty() || restaurant_id.equalsIgnoreCase("\"\"")){
@@ -76,7 +73,7 @@ public class RestaurantBusinessService {
     }
 
     // A Method which takes the categoryUUID as parameter for  getRestaurantByCategoryId endpoint
-    public List<RestaurantCategoryEntity> getRestaurantByCategoryId(final Long categoryID) {
+    public List<RestaurantCategoryEntity> getRestaurantByCategoryId(final Long categoryID) throws CategoryNotFoundException {
         return restaurantDao.getRestaurantByCategoryId(categoryID);
     }
 }
