@@ -49,12 +49,7 @@ public class RestaurantBusinessService {
             throw new RestaurantNotFoundException("RNF-002", "Restaurant id field should not be empty");
         }
 
-        //get the restaurant Details using the restaurantUuid
-        RestaurantEntity restaurantEntity =  restaurantDao.getRestaurantByUUId(restaurant_id);
-
-        if (restaurantEntity == null) {
-            throw new RestaurantNotFoundException("RNF-001", "No restaurant by this id");
-        }
+        RestaurantEntity restaurantEntity = getRestaurantEntity(restaurant_id);
 
         // Throw exception if path variable(restaurant_id) is empty
         if(customerRating == null || customerRating.isNaN() || customerRating < 1 || customerRating > 5 ){
@@ -69,6 +64,15 @@ public class RestaurantBusinessService {
 
         //called restaurantDao to merge the content and update in the database
         restaurantDao.updateRestaurant(restaurantEntity);
+        return restaurantEntity;
+    }
+
+    public RestaurantEntity getRestaurantEntity(String restaurant_id) throws RestaurantNotFoundException{
+        //get the restaurant Details using the restaurantUuid
+        RestaurantEntity restaurantEntity =  restaurantDao.getRestaurantByUUId(restaurant_id);
+        if (restaurantEntity == null) {
+            throw new RestaurantNotFoundException("RNF-001", "No restaurant by this id");
+        }
         return restaurantEntity;
     }
 

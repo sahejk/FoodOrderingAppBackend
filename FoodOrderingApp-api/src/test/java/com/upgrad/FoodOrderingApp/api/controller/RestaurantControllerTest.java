@@ -216,6 +216,7 @@ public class RestaurantControllerTest {
     // is not category by that id in the database
     @Test
     public void shouldNotGetRestaurantsByCategoryIdIfCategoryDoesNotExistAgainstGivenId() throws Exception {
+        when(mockCategoryService.getCategoryEntityByUuid(anyString())).thenReturn(getCategoryEntity());
         when(mockRestaurantService.getRestaurantByCategoryId(anyLong()))
                 .thenThrow(new CategoryNotFoundException("CNF-002", "No category by this id"));
 
@@ -369,7 +370,7 @@ public class RestaurantControllerTest {
         when(mockCustomerService.getCustomer("database_accesstoken2"))
                 .thenReturn(new CustomerEntity());
 
-        when(mockRestaurantService.getRestaurantByUUId(restaurantId))
+        when(mockRestaurantService.getRestaurantEntity(restaurantId))
                 .thenThrow(new RestaurantNotFoundException("RNF-001", "No restaurant by this id"));
 
         mockMvc
@@ -379,7 +380,7 @@ public class RestaurantControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("code").value("RNF-001"));
         verify(mockCustomerService, times(1)).getCustomer("database_accesstoken2");
-        verify(mockRestaurantService, times(1)).getRestaurantByUUId(restaurantId);
+        verify(mockRestaurantService, times(1)).getRestaurantEntity(restaurantId);
         verify(mockRestaurantService, times(0))
                 .updateCustomerRating(anyDouble(),anyString(), any());
     }

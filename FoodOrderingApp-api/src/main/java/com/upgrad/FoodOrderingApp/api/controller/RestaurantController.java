@@ -334,6 +334,7 @@ public class RestaurantController {
         // Get the bearerToken
         String[] bearerToken = authorization.split("Bearer ");
         CustomerEntity customerEntity = customerBusinessService.getCustomer(bearerToken[1]);
+        restaurantBusinessService.getRestaurantEntity(restaurant_id);
         // Call the RestaurantBusinessService to update the customer
         RestaurantEntity restaurantEntity = restaurantBusinessService.updateCustomerRating(customerRating, restaurant_id, customerEntity);
 
