@@ -57,7 +57,7 @@ public class RestaurantController {
             detail.setNumberCustomersRated(n.getNumberOfCustomerRated());
 
             // Getting address of restaurant from address entity
-            AddressEntity addressEntity = addressService.getAddressById(n.getAddress().getId());
+            AddressEntity addressEntity = n.getAddress();
             RestaurantDetailsResponseAddress responseAddress = new RestaurantDetailsResponseAddress();
 
             responseAddress.setId(UUID.fromString(addressEntity.getUuid()));
@@ -67,7 +67,7 @@ public class RestaurantController {
             responseAddress.setPincode(addressEntity.getPincode());
 
             // Getting state for current address from state entity
-            StateEntity stateEntity = stateBusinessService.getStateById(addressEntity.getStateName().getId());
+            StateEntity stateEntity = addressEntity.getStateName();
             RestaurantDetailsResponseAddressState responseAddressState = new RestaurantDetailsResponseAddressState();
 
             responseAddressState.setId(UUID.fromString(stateEntity.getUuid()));
@@ -197,7 +197,7 @@ public class RestaurantController {
             detail.setNumberCustomersRated(n.getNumberOfCustomerRated());
 
             // Getting address of restaurant from address entity
-            AddressEntity addressEntity = addressService.getAddressById(n.getAddress().getId());
+            AddressEntity addressEntity = n.getAddress();
             RestaurantDetailsResponseAddress responseAddress = new RestaurantDetailsResponseAddress();
 
             responseAddress.setId(UUID.fromString(addressEntity.getUuid()));
@@ -207,7 +207,7 @@ public class RestaurantController {
             responseAddress.setPincode(addressEntity.getPincode());
 
             // Getting state for current address from state entity
-            StateEntity stateEntity = stateBusinessService.getStateById(addressEntity.getStateName().getId());
+            StateEntity stateEntity = addressEntity.getStateName();
             RestaurantDetailsResponseAddressState responseAddressState = new RestaurantDetailsResponseAddressState();
 
             responseAddressState.setId(UUID.fromString(stateEntity.getUuid()));

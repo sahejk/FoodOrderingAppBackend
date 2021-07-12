@@ -36,7 +36,7 @@ public class RestaurantBusinessService {
     }
 
     // A Method which takes the restaurantName as parameter for  getRestaurantsByName endpoint
-    public List<RestaurantEntity> getRestaurantsByName(String restaurantName) {
+    public List<RestaurantEntity> getRestaurantsByName(String restaurantName) throws RestaurantNotFoundException {
         return restaurantDao.getRestaurantsByName(restaurantName);
     }
 

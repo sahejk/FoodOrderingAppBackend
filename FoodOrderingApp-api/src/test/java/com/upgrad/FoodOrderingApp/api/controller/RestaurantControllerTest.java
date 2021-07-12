@@ -170,14 +170,15 @@ public class RestaurantControllerTest {
     //This test case passes when you are able to retrieve restaurant belonging to any particular categories.
     @Test
     public void shouldGetRestaurantDetailsByGivenCategoryId() throws Exception {
-        final RestaurantEntity restaurantEntity = getRestaurantEntity();
-        ArrayList list = new ArrayList<RestaurantEntity>();
+        final RestaurantCategoryEntity restaurantEntity = new RestaurantCategoryEntity();
+        restaurantEntity.setRestaurant(getRestaurantEntity());
+        ArrayList list = new ArrayList<RestaurantCategoryEntity>();
         list.add(restaurantEntity);
         when(mockRestaurantService.getRestaurantByCategoryId(anyLong()))
                 .thenReturn(list);
 
         final CategoryEntity categoryEntity = getCategoryEntity();
-        when(mockCategoryService.getCategoryEntityByUuid(restaurantEntity.getUuid()))
+        when(mockCategoryService.getCategoryEntityByUuid(anyString()))
                 .thenReturn(categoryEntity);
 
         final String responseString = mockMvc
@@ -185,16 +186,16 @@ public class RestaurantControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        final RestaurantListResponse restaurantListResponse = new ObjectMapper().readValue(responseString, RestaurantListResponse.class);
-        assertEquals(restaurantListResponse.getRestaurants().size(), 1);
+        final RestaurantList[] restaurantListResponse = new ObjectMapper().readValue(responseString, RestaurantList[].class);
+        assertEquals(restaurantListResponse.length, 1);
 
-        final RestaurantList restaurantList = restaurantListResponse.getRestaurants().get(0);
-        assertEquals(restaurantList.getId().toString(), restaurantEntity.getUuid());
-        assertEquals(restaurantList.getAddress().getId().toString(), restaurantEntity.getAddress().getUuid());
-        assertEquals(restaurantList.getAddress().getState().getId().toString(), restaurantEntity.getAddress().getStateName().getUuid());
+        final RestaurantList restaurantList = restaurantListResponse[0];
+        assertEquals(restaurantList.getId().toString(), restaurantEntity.getRestaurant().getUuid());
+        assertEquals(restaurantList.getAddress().getId().toString(), restaurantEntity.getRestaurant().getAddress().getUuid());
+        assertEquals(restaurantList.getAddress().getState().getId().toString(), restaurantEntity.getRestaurant().getAddress().getStateName().getUuid());
 
         verify(mockRestaurantService, times(1)).getRestaurantByCategoryId(anyLong());
-        verify(mockCategoryService, times(1)).getCategoryEntityByUuid(restaurantEntity.getUuid());
+        verify(mockCategoryService, times(1)).getCategoryEntityByUuid(anyString());
     }
 
     //This test case passes when you have handled the exception of trying to fetch any restaurants but your category id
@@ -232,7 +233,7 @@ public class RestaurantControllerTest {
     @Test
     public void shouldGetAllRestaurantDetails() throws Exception {
         final RestaurantEntity restaurantEntity = getRestaurantEntity();
-        when(mockRestaurantService.getRestaurantsByName(anyString()))
+        when(mockRestaurantService.getAllRestaurants())
                 .thenReturn(Collections.singletonList(restaurantEntity));
 
         final CategoryEntity categoryEntity = getCategoryEntity();
@@ -252,8 +253,7 @@ public class RestaurantControllerTest {
         assertEquals(restaurantList.getAddress().getId().toString(), restaurantEntity.getAddress().getUuid());
         assertEquals(restaurantList.getAddress().getState().getId().toString(), restaurantEntity.getAddress().getStateName().getUuid());
 
-        verify(mockRestaurantService, times(1)).getRestaurantsByName(anyString());
-        verify(mockCategoryService, times(1)).getCategoryEntityByUuid(restaurantEntity.getUuid());
+        verify(mockRestaurantService, times(1)).getAllRestaurants();
     }
 
 
@@ -390,13 +390,14 @@ public class RestaurantControllerTest {
     public void shouldNotUpdateRestaurantRatingIfNewRatingIsLessThan1() throws Exception {
         final String restaurantId = UUID.randomUUID().toString();
 
+        CustomerEntity customerEntity = new CustomerEntity();
         when(mockCustomerService.getCustomer("database_accesstoken2"))
-                .thenReturn(new CustomerEntity());
+                .thenReturn(customerEntity);
 
         final RestaurantEntity restaurantEntity = getRestaurantEntity();
         when(mockRestaurantService.getRestaurantByUUId(restaurantId)).thenReturn(restaurantEntity);
 
-        when(mockRestaurantService.updateCustomerRating(-5.5d,anyString(),any()))
+        when(mockRestaurantService.updateCustomerRating(-5.5d,restaurantId,customerEntity))
                 .thenThrow(new InvalidRatingException("IRE-001", "Rating should be in the range of 1 to 5"));
 
         mockMvc
@@ -406,9 +407,8 @@ public class RestaurantControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("code").value("IRE-001"));
         verify(mockCustomerService, times(1)).getCustomer("database_accesstoken2");
-        verify(mockRestaurantService, times(1)).getRestaurantByUUId(restaurantId);
         verify(mockRestaurantService, times(1))
-                .updateCustomerRating(-5.5d,anyString(),any());
+                .updateCustomerRating(-5.5d,restaurantId,customerEntity);
     }
 
     //This test case passes when you have handled the exception of trying to update restaurant rating while the rating
@@ -417,13 +417,14 @@ public class RestaurantControllerTest {
     public void shouldNotUpdateRestaurantRatingIfNewRatingIsGreaterThan5() throws Exception {
         final String restaurantId = UUID.randomUUID().toString();
 
+        CustomerEntity customerEntity = new CustomerEntity();
         when(mockCustomerService.getCustomer("database_accesstoken2"))
-                .thenReturn(new CustomerEntity());
+                .thenReturn(customerEntity);
 
         final RestaurantEntity restaurantEntity = getRestaurantEntity();
         when(mockRestaurantService.getRestaurantByUUId(restaurantId)).thenReturn(restaurantEntity);
 
-        when(mockRestaurantService.updateCustomerRating(5.5d,anyString(),any()))
+        when(mockRestaurantService.updateCustomerRating(5.5d,restaurantId,customerEntity))
                 .thenThrow(new InvalidRatingException("IRE-001", "Rating should be in the range of 1 to 5"));
 
         mockMvc
@@ -433,9 +434,8 @@ public class RestaurantControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("code").value("IRE-001"));
         verify(mockCustomerService, times(1)).getCustomer("database_accesstoken2");
-        verify(mockRestaurantService, times(1)).getRestaurantByUUId(restaurantId);
         verify(mockRestaurantService, times(1))
-                .updateCustomerRating(5.5d, anyString(),any());
+                .updateCustomerRating(5.5d, restaurantId,customerEntity);
     }
 
     // ------------------------------------------ POJO builders ------------------------------------------
@@ -455,6 +455,7 @@ public class RestaurantControllerTest {
         final String categoryId = UUID.randomUUID().toString();
         categoryEntity.setUuid(categoryId);
         categoryEntity.setCategoryName("someCategory");
+        categoryEntity.setId(1234l);
         return categoryEntity;
     }
 
