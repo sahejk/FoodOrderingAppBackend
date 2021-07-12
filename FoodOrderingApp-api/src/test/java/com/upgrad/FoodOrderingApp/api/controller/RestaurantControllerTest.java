@@ -82,9 +82,6 @@ public class RestaurantControllerTest {
                 .andExpect(jsonPath("customer_rating").value(3.4))
                 .andExpect(jsonPath("number_customers_rated").value(200));
         verify(mockRestaurantService, times(1)).getRestaurantByUUId("someRestaurantId");
-        verify(mockCategoryService, times(1)).getCategoryEntityByUuid("someRestaurantId");
-        verify(mockItemService, times(1))
-                .getItemEntityByUuid("someRestaurantId");
     }
 
     //This test case passes when you have handled the exception of trying to fetch any restaurant but your restaurant id

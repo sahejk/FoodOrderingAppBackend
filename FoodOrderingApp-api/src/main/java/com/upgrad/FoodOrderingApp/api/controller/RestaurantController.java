@@ -269,7 +269,7 @@ public class RestaurantController {
         details.setNumberCustomersRated(restaurant.getNumberOfCustomerRated());
 
         // Getting address of restaurant from address entity
-        AddressEntity addressEntity = addressService.getAddressById(restaurant.getAddress().getId());
+        AddressEntity addressEntity = restaurant.getAddress();
         RestaurantDetailsResponseAddress responseAddress = new RestaurantDetailsResponseAddress();
 
         responseAddress.setId(UUID.fromString(addressEntity.getUuid()));
@@ -279,7 +279,7 @@ public class RestaurantController {
         responseAddress.setPincode(addressEntity.getPincode());
 
         // Setting address with state into restaurant obj
-        StateEntity stateEntity = stateBusinessService.getStateById(addressEntity.getStateName().getId());
+        StateEntity stateEntity = addressEntity.getStateName();
         RestaurantDetailsResponseAddressState responseAddressState = new RestaurantDetailsResponseAddressState();
 
         responseAddressState.setId(UUID.fromString(stateEntity.getUuid()));
