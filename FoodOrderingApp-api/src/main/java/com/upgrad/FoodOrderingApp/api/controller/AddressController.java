@@ -29,12 +29,15 @@ public class AddressController {
     @Autowired
     private CustomerBusinessService customerBusinessService;
 
+
+
     // Save address endpoint requests for all the attributes in “SaveAddressRequest” about the address
     // and saves an address successfully.
     @RequestMapping(method = RequestMethod.POST, path = "/address", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<SaveAddressResponse> saveAddress(@RequestHeader(value = "authorization", required = true) String authorization,
                                                            @RequestBody(required = false) final SaveAddressRequest saveAddressRequest)
             throws AuthorizationFailedException, SaveAddressException, AddressNotFoundException {
+
 
         // Splits the Bearer authorization text as Bearer and bearerToken
         String[] bearerToken = authorization.split("Bearer ");
@@ -56,6 +59,7 @@ public class AddressController {
         // Loads the SaveAddressResponse with the uuid of the new address created and the respective status message
         SaveAddressResponse saveAddressResponse = new SaveAddressResponse().id(savedAddressEntity.getUuid())
                 .status("ADDRESS SUCCESSFULLY REGISTERED");
+
 
         // Returns the SaveAddressResponse with resource created http status
         return new ResponseEntity<>(saveAddressResponse, HttpStatus.CREATED);

@@ -11,6 +11,7 @@ import javax.transaction.Transactional;
 @Service
 public class CouponService {
 
+    //Declaring a variable called couponDao
     @Autowired
     private CouponDao couponDao;
 
@@ -19,6 +20,7 @@ public class CouponService {
         return couponDao.getCouponById(couponId);
     }
 
+    //throws an exception CuponNotFoundException
     @Transactional
     public CouponEntity getCouponByUuid(final String couponUuid) throws CouponNotFoundException {
         return couponDao.getCouponByUuid(couponUuid);
